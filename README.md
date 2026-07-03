@@ -3,6 +3,37 @@
 Projeto da disciplina de Projeto e Análise de Algoritmos (UnB). Sistema de busca
 semântica sobre o CMU Movie Summary Corpus, usando RAG e LLM local.
 
+## Como usar (pra quem não é da parte de pré-processamento)
+
+Os dados brutos e processados (`data/`) não ficam no git — é tudo gerado
+localmente. Duas opções:
+
+**Opção 1 — gerar você mesmo (recomendado, é só um comando):**
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # no Windows
+pip install -r requirements.txt
+python src/preprocessing/preprocess.py
+```
+
+O script baixa o dataset, extrai, processa e gera os dois arquivos em
+`data/processed/`. Leva alguns minutos na primeira vez (download +
+tokenização de ~42 mil resumos); depois disso não precisa rodar de novo.
+
+**Opção 2 — pedir os arquivos prontos:** peça pra pessoa responsável pelo
+pré-processamento os arquivos `movies.parquet` e `characters.parquet` (por
+Drive, Discord, etc.) e coloque os dois em `data/processed/` — nesse caso
+não precisa instalar nada nem rodar o script, só ler os parquets direto
+com `pandas.read_parquet(...)`.
+
+Onde encontrar tudo:
+- `data/processed/movies.parquet` — um filme por linha (resumo, gêneros,
+  tokens etc.)
+- `data/processed/characters.parquet` — um personagem/ator por linha
+- ambos compartilham a coluna `wiki_movie_id` (veja "Chave de junção" mais
+  abaixo) pra quem precisar cruzar os dois
+
 ## Estrutura
 
 ```
@@ -39,16 +70,10 @@ fazer o merge por `wiki_movie_id` na hora do uso.
 
 ### Como rodar
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate        # no Windows
-pip install -r requirements.txt
-python src/preprocessing/preprocess.py
-```
-
-O download (~1GB descompactado) e a tokenização de ~42 mil resumos levam
-alguns minutos na primeira execução. Nas próximas, o script pula download e
-extração se os arquivos já existirem em `data/raw/`.
+Ver "Como usar" no topo do README. O download (~1GB descompactado) e a
+tokenização de ~42 mil resumos levam alguns minutos na primeira execução.
+Nas próximas, o script pula download e extração se os arquivos já
+existirem em `data/raw/`.
 
 ### Saída
 
@@ -88,6 +113,21 @@ Esse parquet é a entrada esperada pelo módulo de busca semântica
 | freebase_char_actor_map_id   | id Freebase do vínculo personagem-ator  |
 | freebase_character_id        | id Freebase do personagem               |
 | freebase_actor_id            | id Freebase do ator/atriz               |
+
+### Chave de junção entre os dois arquivos
+
+`movies.parquet` e `characters.parquet` têm granularidades diferentes (um
+filme vs. um personagem/ator), mas compartilham a coluna **`wiki_movie_id`**
+(id do filme na Wikipedia). Pra cruzar os dois, use ela como chave:
+
+```python
+import pandas as pd
+
+movies = pd.read_parquet("data/processed/movies.parquet")
+characters = pd.read_parquet("data/processed/characters.parquet")
+
+merged = characters.merge(movies, on="wiki_movie_id", how="left")
+```
 
 ## Notebook de exploração (notebooks/exploracao.ipynb)
 
