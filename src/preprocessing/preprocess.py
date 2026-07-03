@@ -37,6 +37,22 @@ METADATA_COLUMNS = [
     "genres",
 ]
 
+CHARACTER_COLUMNS = [
+    "wiki_movie_id",
+    "freebase_movie_id",
+    "release_date",
+    "character_name",
+    "actor_dob",
+    "actor_gender",
+    "actor_height",
+    "actor_ethnicity",
+    "actor_name",
+    "actor_age_at_release",
+    "freebase_char_actor_map_id",
+    "freebase_character_id",
+    "freebase_actor_id",
+]
+
 
 def download_dataset():
     if ARCHIVE_PATH.exists():
@@ -79,6 +95,12 @@ def load_plot_summaries():
 def load_metadata():
     path = EXTRACT_DIR / "movie.metadata.tsv"
     df = pd.read_csv(path, sep="\t", header=None, names=METADATA_COLUMNS)
+    return df
+
+
+def load_characters():
+    path = EXTRACT_DIR / "character.metadata.tsv"
+    df = pd.read_csv(path, sep="\t", header=None, names=CHARACTER_COLUMNS)
     return df
 
 
@@ -130,5 +152,26 @@ def preprocess():
     return df
 
 
+def preprocess_characters():
+    """
+    Salvo em arquivo separado de movies.parquet porque a granularidade é
+    diferente: um filme tem várias linhas aqui (uma por personagem/ator),
+    então juntar com movies.parquet duplicaria resumo e tokens várias vezes
+    por filme à toa.
+    """
+    download_dataset()
+    extract_dataset()
+
+    df = load_characters()
+
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = PROCESSED_DIR / "characters.parquet"
+    df.to_parquet(out_path, index=False)
+
+    print(f"{len(df)} personagens processados -> {out_path}")
+    return df
+
+
 if __name__ == "__main__":
     preprocess()
+    preprocess_characters()
