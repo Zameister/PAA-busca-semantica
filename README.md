@@ -103,3 +103,14 @@ characters = pd.read_parquet("data/processed/characters.parquet")
 
 merged = characters.merge(movies, on="wiki_movie_id", how="left")
 ```
+
+## Notebook de exploração (notebooks/exploracao.ipynb)
+
+Estatísticas básicas sobre `movies.parquet`: número total de filmes,
+distribuição dos gêneros mais comuns e tamanho médio/mediano das sinopses
+em número de tokens, com os gráficos correspondentes. Serve como checagem
+rápida de sanidade dos dados antes de gerar embeddings.
+
+Pra abrir: instale as dependências do `requirements.txt` (inclui
+`ipykernel`) e abra o notebook no VS Code, JupyterLab ou Jupyter Notebook
+usando o kernel do `.venv` do projeto.
