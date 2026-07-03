@@ -37,6 +37,19 @@ de personagens, então cada linha de `movies.parquet` viraria várias linhas
 repetindo o mesmo resumo e tokens à toa. Quem precisar cruzar os dois pode
 fazer o merge por `wiki_movie_id` na hora do uso.
 
+### Como rodar
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # no Windows
+pip install -r requirements.txt
+python src/preprocessing/preprocess.py
+```
+
+O download (~1GB descompactado) e a tokenização de ~42 mil resumos levam
+alguns minutos na primeira execução. Nas próximas, o script pula download e
+extração se os arquivos já existirem em `data/raw/`.
+
 ### Saída
 
 `data/processed/movies.parquet`, com uma linha por filme e as colunas:

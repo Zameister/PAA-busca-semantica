@@ -1,5 +1,7 @@
-pandas
-nltk
-requests
-beautifulsoup4
-pyarrow
+pandas==3.0.3
+nltk==3.9.4
+requests==2.34.2
+beautifulsoup4==4.15.0
+pyarrow==24.0.0
+matplotlib==3.11.0
+ipykernel==7.3.0
