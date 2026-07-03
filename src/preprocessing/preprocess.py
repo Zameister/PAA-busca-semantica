@@ -86,13 +86,19 @@ def extract_names(freebase_dict_str):
     """Campos de gênero/idioma/país vêm como string de dict {freebase_id: nome}."""
     try:
         d = ast.literal_eval(freebase_dict_str)
-        return list(d.values())
+        return [strip_surrogates(v) for v in d.values()]
     except (ValueError, SyntaxError):
         return []
 
 
+def strip_surrogates(text):
+    """O corpus tem alguns bytes mal decodificados que viram surrogates inválidos em utf-8."""
+    return text.encode("utf-8", "ignore").decode("utf-8")
+
+
 def clean_text(text):
     text = BeautifulSoup(text, "html.parser").get_text()
+    text = strip_surrogates(text)
     text = unicodedata.normalize("NFKC", text)
     text = text.lower()
     text = re.sub(r"\s+", " ", text).strip()
