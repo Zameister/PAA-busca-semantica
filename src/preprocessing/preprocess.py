@@ -1,15 +1,20 @@
 """
 Pre-processamento do CMU Movie Summary Corpus.
 
-Baixa o dataset e junta os resumos de enredo com os metadados dos filmes.
+Baixa o dataset, junta os resumos de enredo com os metadados dos filmes,
+limpa e tokeniza o texto, e salva tudo em data/processed/movies.parquet.
 """
 
 import ast
+import re
 import tarfile
+import unicodedata
 from pathlib import Path
 
+import nltk
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 
 DATASET_URL = "http://www.cs.cmu.edu/~ark/personas/data/MovieSummaries.tar.gz"
 
@@ -53,6 +58,18 @@ def extract_dataset():
         tar.extractall(RAW_DIR, filter="data")
 
 
+def ensure_nltk_resources():
+    resources = {
+        "punkt_tab": "tokenizers/punkt_tab",
+        "punkt": "tokenizers/punkt",
+    }
+    for name, path in resources.items():
+        try:
+            nltk.data.find(path)
+        except LookupError:
+            nltk.download(name)
+
+
 def load_plot_summaries():
     path = EXTRACT_DIR / "plot_summaries.txt"
     df = pd.read_csv(path, sep="\t", header=None, names=["wiki_movie_id", "summary"])
@@ -74,9 +91,18 @@ def extract_names(freebase_dict_str):
         return []
 
 
+def clean_text(text):
+    text = BeautifulSoup(text, "html.parser").get_text()
+    text = unicodedata.normalize("NFKC", text)
+    text = text.lower()
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def preprocess():
     download_dataset()
     extract_dataset()
+    ensure_nltk_resources()
 
     summaries = load_plot_summaries()
     metadata = load_metadata()
@@ -86,6 +112,9 @@ def preprocess():
     df["genres"] = df["genres"].apply(extract_names)
     df["languages"] = df["languages"].apply(extract_names)
     df["countries"] = df["countries"].apply(extract_names)
+
+    df["clean_summary"] = df["summary"].apply(clean_text)
+    df["tokens"] = df["clean_summary"].apply(nltk.word_tokenize)
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     out_path = PROCESSED_DIR / "movies.parquet"
