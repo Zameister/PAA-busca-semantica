@@ -28,6 +28,14 @@ O que o script faz:
 3. Limpa o texto dos resumos: remove HTML, normaliza unicode, deixa em minúsculo.
 4. Tokeniza os resumos limpos com NLTK.
 5. Salva tudo em `data/processed/movies.parquet`.
+6. Lê `character.metadata.tsv` (personagens/atores) e salva em
+   `data/processed/characters.parquet`.
+
+**Por que `characters.parquet` é um arquivo separado, e não um join com
+`movies.parquet`:** a granularidade é diferente — um filme pode ter dezenas
+de personagens, então cada linha de `movies.parquet` viraria várias linhas
+repetindo o mesmo resumo e tokens à toa. Quem precisar cruzar os dois pode
+fazer o merge por `wiki_movie_id` na hora do uso.
 
 ### Como rodar
 
@@ -62,3 +70,32 @@ extração se os arquivos já existirem em `data/raw/`.
 
 Esse parquet é a entrada esperada pelo módulo de busca semântica
 (`src/search/`) para gerar os embeddings.
+
+`data/processed/characters.parquet`, com uma linha por personagem/ator:
+
+| coluna                      | descrição                              |
+|-----------------------------|------------------------------------------|
+| wiki_movie_id                | id do filme na Wikipedia                |
+| freebase_movie_id            | id do filme no Freebase                 |
+| release_date                 | data de lançamento                      |
+| character_name               | nome do personagem                      |
+| actor_dob                    | data de nascimento do ator/atriz        |
+| actor_gender                 | gênero do ator/atriz                    |
+| actor_height                 | altura (m)                              |
+| actor_ethnicity               | etnia (id Freebase)                     |
+| actor_name                   | nome do ator/atriz                      |
+| actor_age_at_release         | idade do ator/atriz no lançamento       |
+| freebase_char_actor_map_id   | id Freebase do vínculo personagem-ator  |
+| freebase_character_id        | id Freebase do personagem               |
+| freebase_actor_id            | id Freebase do ator/atriz               |
+
+## Notebook de exploração (notebooks/exploracao.ipynb)
+
+Estatísticas básicas sobre `movies.parquet`: número total de filmes,
+distribuição dos gêneros mais comuns e tamanho médio/mediano das sinopses
+em número de tokens, com os gráficos correspondentes. Serve como checagem
+rápida de sanidade dos dados antes de gerar embeddings.
+
+Pra abrir: instale as dependências do `requirements.txt` (inclui
+`ipykernel`) e abra o notebook no VS Code, JupyterLab ou Jupyter Notebook
+usando o kernel do `.venv` do projeto.
