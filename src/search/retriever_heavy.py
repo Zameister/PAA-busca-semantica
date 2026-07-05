@@ -13,6 +13,17 @@ except Exception:
     raise ImportError("Install faiss-cpu or faiss-gpu to use FAISS: pip install faiss-cpu")
 
 
+def _to_jsonable(value):
+    """metadata.parquet guarda colunas cruas de movies.parquet (tokens como
+    ndarray, ids como np.int64, etc.) que o FastAPI/pydantic não sabe serializar
+    direto -- converte pros tipos nativos do Python antes de devolver na API."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
 class HeavyRetriever:
     def __init__(self, index_dir: str = "artifacts/heavy_index", model_name: str = "sentence-transformers/all-MiniLM-L6-v2", use_gpu: bool = False):
         self.index_dir = Path(index_dir)
@@ -47,7 +58,7 @@ class HeavyRetriever:
         for idx, score in zip(idxs, scores):
             if idx < 0:
                 continue
-            row = self.metadata.iloc[idx].to_dict()
+            row = {k: _to_jsonable(v) for k, v in self.metadata.iloc[idx].to_dict().items()}
             row.update({"score": float(score), "_idx": int(idx)})
             results.append(row)
 
