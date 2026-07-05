@@ -3,8 +3,14 @@
 Uso:
     python scripts/precompute_embeddings.py --input data/processed/movies.parquet --out artifacts/heavy_index
 """
+import sys
 from pathlib import Path
 import argparse
+
+# raiz do repo (pai de scripts/) precisa estar no sys.path pro import "src.search"
+# funcionar quando este arquivo é rodado direto (python scripts/precompute_embeddings.py)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from src.search.indexer_heavy import build_index
 
 
