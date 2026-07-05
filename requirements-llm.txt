@@ -1,0 +1,5 @@
+transformers==5.13.0
+torch==2.12.1
+fastapi==0.139.0
+uvicorn==0.50.0
+streamlit==1.58.0
