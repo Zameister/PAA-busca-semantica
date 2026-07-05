@@ -9,6 +9,8 @@ instalado. Isso NÃO testa se o gensim.Word2Vec em si funciona (é uma bibliotec
 de terceiros, não é nosso código), só garante que o código escrito por nós ao
 redor dele está correto. Rodar com: python3 test_word2vec_logic.py
 """
+from unittest.mock import patch
+
 import numpy as np
 
 from corpus_loader import FALLBACK_SAMPLE_PATH, load_corpus
@@ -59,13 +61,19 @@ def test_l2_normalize_rows():
 
 def test_tokenize_falls_back_to_regex_without_nltk_data():
     """
-    Neste ambiente (onde este arquivo foi escrito) nem o pacote nltk está
-    instalado, então _tokenize() DEVE cair pro simple_tokenize automaticamente
-    -- isto testa exatamente esse fallback, não o nltk em si.
+    nltk é dependência obrigatória do projeto (requirements.txt), então não dá
+    pra testar o fallback contando com ele estar ausente do ambiente. Em vez
+    disso, forçamos o LookupError que nltk.word_tokenize levantaria se os
+    dados do punkt não estivessem baixados, pra testar o fallback de forma
+    determinística em qualquer máquina.
     """
-    tokens = _tokenize("Hello, World! It's a test.")
+    import nltk
+
+    with patch.object(nltk, "word_tokenize", side_effect=LookupError("punkt não baixado (simulado)")):
+        tokens = _tokenize("Hello, World! It's a test.")
+
     assert tokens == ["hello", "world", "it", "s", "a", "test"], tokens
-    print("OK: _tokenize cai pro regex de fallback quando nltk não está disponível "
+    print("OK: _tokenize cai pro regex de fallback quando os dados do nltk não estão disponíveis "
           f"(resultado: {tokens})")
 
 
