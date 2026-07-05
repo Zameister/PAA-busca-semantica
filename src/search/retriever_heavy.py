@@ -1,3 +1,40 @@
+"""
+retriever_heavy.py — Método 3 (Pessoa 3): busca semântica com embeddings SBERT
+(SentenceTransformer) + FAISS. Consome o índice gerado por indexer_heavy.py.
+
+Complexidade
+------------
+Indexação: ver indexer_heavy.py.
+
+Busca (retrieve), por query:
+    1) Embedding da query: custo fixo do modelo SentenceTransformer,
+       independente de n (mesmo custo por consulta seja o corpus com 1000 ou
+       1 milhão de filmes).
+    2) `self.index.search(q_emb, top_k)`: o índice carregado é o
+       `IndexFlatIP` construído em indexer_heavy.py — ou seja, EXATO/
+       exaustivo, não aproximado. A busca calcula o produto interno da query
+       contra os n vetores do índice inteiros e depois seleciona os top_k
+       maiores. Custo: O(n · dim) por consulta (dim = dimensão do embedding,
+       384 pro modelo default `all-MiniLM-L6-v2`), mais um O(n log top_k)
+       pequeno pra selecionar os melhores.
+
+    => Isso é DIFERENTE do que os slides originais do grupo descreviam
+       (HNSW — Hierarchical Navigable Small World). HNSW é uma estrutura de
+       indexação APROXIMADA: organiza os vetores num grafo de navegação em
+       camadas, permitindo busca em O(log n) esperado, ao custo de não
+       garantir sempre os vizinhos mais próximos exatos (recall < 100%).
+       O código atual usa `faiss.IndexFlatIP`, que é EXATO (sempre encontra
+       os top-k reais, recall = 100% por construção) mas não reduz o "n" —
+       a busca continua sendo O(n · dim), essencialmente o mesmo formato de
+       custo do Método 1 (TF-IDF), só que com embeddings densos (SBERT) no
+       lugar de esparsos (TF-IDF).
+       Trade-off: exato-e-mais-lento (Flat, o que está implementado) vs
+       aproximado-e-mais-rápido (HNSW, o que os slides descreviam). Pra virar
+       a versão HNSW de fato, bastaria trocar `faiss.IndexFlatIP(dim)` por
+       `faiss.IndexHNSWFlat(dim, M)` em indexer_heavy.py — a interface de
+       `retrieve()` não mudaria.
+"""
+
 from pathlib import Path
 import numpy as np
 import pandas as pd

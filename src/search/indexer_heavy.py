@@ -1,3 +1,29 @@
+"""
+indexer_heavy.py — Método 3 (Pessoa 3): embeddings densos via SentenceTransformer
+(SBERT) + índice FAISS. Constrói os embeddings de todo o corpus e monta o
+índice usado depois por retriever_heavy.py.
+
+Complexidade
+------------
+Indexação (build_index):
+    1) Encoding das sinopses pelo SentenceTransformer: uma passada do modelo
+       por batch, n documentos no total. Cada passada tem custo fixo do
+       transformer (depende do tamanho do texto e do modelo, não do tamanho
+       do corpus) — é o termo mais caro da indexação, bem mais pesado que o
+       TF-IDF (Método 1) ou o treino do Word2Vec (Método 2), mas paralelizável
+       em batch (e em GPU, se `use_gpu=True`).
+    2) `faiss.IndexFlatIP(dim)` + `index.add(embeddings)`: "Flat" significa
+       que o índice NÃO tem nenhuma estrutura de indexação de fato — é só um
+       array denso com os n vetores (dimensão `dim`) guardados lado a lado.
+       `add()` é O(n·dim) (cópia dos vetores), sem clustering, sem grafo, sem
+       quantização.
+
+Busca (ver retriever_heavy.py): como o índice é Flat, cada consulta compara
+contra os n vetores inteiros — busca EXAUSTIVA, não aproximada. Ver a nota
+detalhada em retriever_heavy.py sobre a diferença em relação ao HNSW citado
+nos slides originais do grupo.
+"""
+
 import math
 from pathlib import Path
 import numpy as np
