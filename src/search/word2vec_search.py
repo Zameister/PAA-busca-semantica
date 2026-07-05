@@ -55,10 +55,16 @@ média. Com um corpus de treino pequeno, isso pode ser uma fração grande da qu
 from __future__ import annotations
 
 import argparse
+import sys
 import time
+from pathlib import Path
 from typing import Protocol, Sequence
 
 import numpy as np
+
+# garante que este arquivo importa os módulos vizinhos (base_search, corpus_loader,
+# example_queries) tanto rodando como script quanto via pytest/import de outro lugar
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from base_search import BaseSemanticSearch, SearchResult
 from corpus_loader import load_corpus, simple_tokenize

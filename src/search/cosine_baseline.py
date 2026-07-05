@@ -39,11 +39,17 @@ assinatura de BaseSemanticSearch; aqui ele é ignorado.
 from __future__ import annotations
 
 import argparse
+import sys
 import time
+from pathlib import Path
 from typing import Sequence
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+# garante que este arquivo importa os módulos vizinhos (base_search, corpus_loader,
+# example_queries) tanto rodando como script quanto via pytest/import de outro lugar
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from base_search import BaseSemanticSearch, SearchResult
 from corpus_loader import load_corpus

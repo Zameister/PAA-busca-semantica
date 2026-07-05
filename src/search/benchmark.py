@@ -32,11 +32,16 @@ import argparse
 import gc
 import os
 import statistics
+import sys
 import time
 from pathlib import Path
 
 import pandas as pd
 import psutil
+
+# garante que este arquivo importa os módulos vizinhos (base_search, corpus_loader,
+# cosine_baseline, example_queries) tanto rodando como script quanto via pytest/import de outro lugar
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from base_search import BaseSemanticSearch
 from corpus_loader import load_corpus
