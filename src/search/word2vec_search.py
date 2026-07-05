@@ -226,6 +226,10 @@ def _print_results(query: str, results: list[SearchResult]) -> None:
 
 
 def main() -> None:
+    # console do Windows usa cp1252 por padrão, que não representa vários
+    # caracteres do corpus (ex: "ō"); força utf-8 pra não quebrar o print
+    sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="Busca semântica: Word2Vec Average (gensim) + Cosine Similarity")
     parser.add_argument("--data", type=str, default=None,
                          help="parquet/CSV de entrada (default: data/processed/movies.parquet)")
