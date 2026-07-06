@@ -1,5 +1,6 @@
 data/
 models/
+artifacts/
 __pycache__/
 *.pyc
 .venv/
