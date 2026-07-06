@@ -22,12 +22,10 @@ fixo de candidatos já pré-filtrados pela busca dos Métodos 3 (nunca sobre n) 
 poucos finalistas) que torna o Cross-Encoder viável apesar de custar muito
 mais por item do que o bi-encoder.
 
-Observação sobre o código atual: `CrossEncoder(model_name)` é instanciado
-DENTRO da função, ou seja, o modelo é recarregado do zero a cada chamada —
-isso soma um custo fixo de carregamento a cada rerank, além do custo de
-inferência O(K) descrito acima. O ideal seria carregar o modelo uma única vez
-fora da função (como HeavyRetriever já faz com o SentenceTransformer) e
-reaproveitar entre chamadas.
+O modelo é carregado uma única vez por `model_name` (`_get_cross_encoder`
+abaixo) e reaproveitado entre chamadas — o custo de carregamento só é pago
+na primeira vez; nas chamadas seguintes o custo é só o O(K) de inferência
+descrito acima.
 """
 
 from typing import List, Dict
@@ -37,6 +35,14 @@ try:
 except Exception:
     CrossEncoder = None
 
+_cross_encoders: dict = {}  # model_name -> instância já carregada
+
+
+def _get_cross_encoder(model_name: str):
+    if model_name not in _cross_encoders:
+        _cross_encoders[model_name] = CrossEncoder(model_name)
+    return _cross_encoders[model_name]
+
 
 def rerank_with_cross_encoder(query: str, candidates: List[Dict], model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2", batch_size: int = 32):
     """Reordena `candidates` (lista de dicts contendo `clean_summary`) usando um CrossEncoder.
@@ -44,12 +50,11 @@ def rerank_with_cross_encoder(query: str, candidates: List[Dict], model_name: st
     Se o CrossEncoder não estiver disponível, retorna os candidatos sem alteração.
     """
     if CrossEncoder is None:
-        # cross-encoder não instalado; fallback
         return candidates
 
     texts = [c.get("clean_summary", "") for c in candidates]
     pairs = [[query, t] for t in texts]
-    model = CrossEncoder(model_name)
+    model = _get_cross_encoder(model_name)
     scores = model.predict(pairs, batch_size=batch_size)
 
     for c, s in zip(candidates, scores):

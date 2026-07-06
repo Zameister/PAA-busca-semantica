@@ -59,6 +59,7 @@ from word2vec_search import Word2VecAverageSearch
 from example_queries import EXAMPLE_QUERIES
 
 from src.search.retriever_heavy import HeavyRetriever
+from src.search.reranker import rerank_with_cross_encoder
 
 RESULTS_DIR = BASE_DIR / "results"
 INDEX_DIR = BASE_DIR / "artifacts" / "heavy_index"
@@ -131,25 +132,10 @@ def benchmark_heavy_methods(relevant_by_query):
         recall = _recall_at_k([str(r["wiki_movie_id"]) for r in results], relevant_by_query[query])
         rows.append({"method": "sbert_faiss", "query": query, "latency_ms": latency, "recall_at_10": recall})
 
-    # reranker.py instancia o CrossEncoder DENTRO de rerank_with_cross_encoder()
-    # a cada chamada (ver limitação documentada em reranker.py) -- pra não medir
-    # esse overhead de recarregar o modelo do zero em toda repetição do benchmark
-    # (que mascararia o custo real da técnica de reranking), carregamos o
-    # CrossEncoder uma única vez aqui e chamamos .predict() direto.
-    from sentence_transformers import CrossEncoder
-    cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-
-    def _rerank_preloaded(query, candidates):
-        pairs = [[query, c.get("clean_summary", "")] for c in candidates]
-        scores = cross_encoder.predict(pairs)
-        for c, s in zip(candidates, scores):
-            c["rerank_score"] = float(s)
-        return sorted(candidates, key=lambda x: x["rerank_score"], reverse=True)
-
     for query in EXAMPLE_QUERIES:
         def _retrieve_and_rerank():
             candidates = retriever.retrieve(query, top_k=TOP_K * 3)
-            return _rerank_preloaded(query, candidates)[:TOP_K]
+            return rerank_with_cross_encoder(query, candidates)[:TOP_K]
 
         latency = _median_latency_ms(_retrieve_and_rerank)
         results = _retrieve_and_rerank()
