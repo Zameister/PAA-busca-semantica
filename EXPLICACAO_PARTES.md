@@ -1,10 +1,13 @@
 # Explicação de cada parte do projeto
 
-Este documento é material de estudo, não um resumo técnico pra registro. A
-ideia é que cada pessoa leia a própria seção (e dê uma olhada nas outras)
-antes da apresentação e consiga explicar, com as próprias palavras, o que o
-código faz, por que essa abordagem foi escolhida, e o que a complexidade dele
-significa na prática — sem precisar decorar nada.
+Este documento é material de estudo, não um resumo técnico pra registro. O
+projeto foi dividido em 4 frentes de trabalho (organizadas aqui como
+"Pessoa 1" a "Pessoa 4", cada uma correspondendo a uma pasta/responsabilidade
+do código), e a entrega final ficou por conta de uma pessoa só — então a
+ideia é dominar as 4 seções o suficiente pra explicar, com as próprias
+palavras, o que cada parte do código faz, por que essa abordagem foi
+escolhida, e o que a complexidade dela significa na prática — sem precisar
+decorar nada.
 
 Índice:
 - [Pessoa 1 — Pré-processamento dos dados](#pessoa-1--pré-processamento-dos-dados)
@@ -213,14 +216,6 @@ como explicado na seção da Pessoa 3 — vale a pena ler os dois juntos).
 **Código:** `src/search/indexer_heavy.py`, `src/search/retriever_heavy.py`
 (Método 3) e `src/search/reranker.py` (Método 4, variação com reranking)
 
-> ⚠️ **Nota da integração final:** a análise de complexidade desta seção e
-> os comentários em `indexer_heavy.py` / `retriever_heavy.py` / `reranker.py`
-> foram adicionados durante a integração final do projeto (não foram escritos
-> originalmente por quem implementou esta parte). Revisar e confirmar que
-> faz sentido com o que você (Vinícius) implementou de fato, antes da
-> apresentação — se algo aqui não bater com a sua intenção original,
-> ajustar.
-
 ### O que o código faz, passo a passo
 
 **Método 3 — SBERT + FAISS:**
@@ -332,15 +327,16 @@ trocasse pra HNSW.
   dele. É esse "funil" (buscar barato entre milhares, refinar caro só nos
   finalistas) que torna o Cross-Encoder viável apesar de custar muito mais
   por item que o bi-encoder.
-- **Limitação de implementação encontrada:** `CrossEncoder(model_name)` é
-  instanciado (recarregado do zero) **a cada chamada** de
-  `rerank_with_cross_encoder()`, em vez de ser carregado uma vez só e
-  reaproveitado (como `HeavyRetriever` já faz com o `SentenceTransformer`).
-  Isso soma um custo fixo de carregamento a cada requisição, em cima do
-  custo O(K) real do reranking — no benchmark deste projeto, isso inflava a
-  latência medida de ~870ms (custo real) pra quase 6 segundos (com o
-  recarregamento). Vale a pena corrigir antes de uma eventual demonstração
-  ao vivo com muitas buscas seguidas.
+- **Cuidado de implementação (corrigido):** a versão original de
+  `rerank_with_cross_encoder()` instanciava (recarregava do zero) o
+  `CrossEncoder` **a cada chamada**, em vez de carregar uma vez só e
+  reaproveitar. Isso somava um custo fixo de carregamento a cada requisição,
+  em cima do custo O(K) real do reranking — no benchmark deste projeto, isso
+  chegou a inflar a latência medida de ~870ms (custo real de inferência) pra
+  quase 6 segundos (com o recarregamento). Corrigido guardando o modelo num
+  cache por `model_name` (`_get_cross_encoder()`), do mesmo jeito que
+  `HeavyRetriever` já fazia com o `SentenceTransformer` — agora o
+  carregamento só acontece na primeira chamada.
 
 ### Decisões importantes de implementação
 
@@ -356,11 +352,13 @@ trocasse pra HNSW.
 
 - `IndexFlatIP` é exato, mas não escala sub-linearmente (mesma ordem de
   custo do Método 1) — pra ganhar velocidade de verdade em corpora maiores,
-  precisaria migrar pra HNSW (ou outro índice aproximado do FAISS).
-- Reload do CrossEncoder a cada chamada (ver "Complexidade" acima) —
-  problema de performance, não de corretude.
-- Sem testes automatizados nesta branch (diferente da Pessoa 2, que tem 18
-  testes cobrindo a lógica de busca).
+  precisaria migrar pra HNSW (ou outro índice aproximado do FAISS). Essa é
+  uma limitação de **design** (escolha consciente entre exatidão e
+  velocidade), não um bug — documentada aqui pra ficar claro na apresentação
+  que o grupo sabe da diferença em relação ao que os slides originais
+  descreviam.
+- Sem testes automatizados pra esta parte (diferente da busca leve, que tem
+  18 testes cobrindo a lógica).
 
 ---
 
@@ -457,11 +455,13 @@ trocasse pra HNSW.
   recomendação totalmente nova e natural. Funcional, mas não é uma resposta
   "polida" como a de um modelo comercial grande, que tem muito mais
   parâmetros e treino.
-- **Latência do reranking herdada da Pessoa 3:** como a API usa o Método
-  3+4, ela herda o problema de performance do recarregamento do
-  CrossEncoder a cada chamada (~870ms de latência real, mas pode ficar mais
-  lento por causa desse bug — ver seção da Pessoa 3).
-- Sem testes automatizados nesta branch.
+- **Latência do reranking:** como a API usa o Método 3+4, ela herda o custo
+  real do Cross-Encoder (~865ms por requisição pra rerankear ~30
+  candidatos — ver "Complexidade" da Pessoa 3). Isso não é mais inflado por
+  recarregamento de modelo (já corrigido), mas ainda é o principal custo de
+  latência da API — reduzir isso exigiria um modelo de reranking menor ou
+  rerankear menos candidatos.
+- Sem testes automatizados pra esta parte.
 
 ---
 
