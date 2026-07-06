@@ -267,10 +267,14 @@ python scripts/benchmark_all_methods.py
 
 | Método | Latência média | Recall@10 (proxy) |
 |---|---|---|
-| word2vec_avg | 0.35 ms | 0.0026 |
-| cosine_tfidf | 6.26 ms | 0.0046 |
-| sbert_faiss | 13.8 ms | 0.0061 |
-| sbert_faiss + rerank | 870.7 ms | 0.0065 |
+| word2vec_avg | 0.34 ms | 0.0025 |
+| cosine_tfidf | 6.34 ms | 0.0046 |
+| sbert_faiss | 14.0 ms | 0.0061 |
+| sbert_faiss + rerank | 865.5 ms | 0.0065 |
+
+O número do reranking já reflete o modelo carregado uma única vez (ver
+"API + LLM local" acima) — os ~865ms são o custo real de rodar o
+Cross-Encoder sobre ~30 candidatos, não overhead de recarregar o modelo.
 
 Padrão esperado: métodos mais lentos e sofisticados (SBERT, rerank) acham
 mais resultados relevantes; os métodos leves são ordens de magnitude mais
