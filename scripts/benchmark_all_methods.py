@@ -30,11 +30,40 @@ persegue pessoas na floresta à noite"). Fica registrado aqui como limitação
 conhecida — uma melhoria futura seria o grupo montar um gabarito de verdade,
 mesmo que pequeno (ex: 10-20 filmes julgados manualmente por query).
 
-Como os conjuntos "relevantes por gênero" são grandes (centenas a milhares de
-filmes por query) e cada método só retorna top_k=10, os valores de recall@10
-são pequenos em valor absoluto pra todos os métodos — isso é esperado, o que
-importa pra comparação é a diferença RELATIVA entre os métodos, não o valor
-absoluto.
+Por que os valores de recall@10 são tão baixos (0.2%-2%, não um bug)
+---------------------------------------------------------------------
+Investigado explicitamente (tipos de dado, normalização de string, tamanho
+do conjunto "relevante" por query, aplicação do top_k) — o código está
+correto. O valor absoluto baixo é uma CONSEQUÊNCIA MATEMÁTICA inevitável da
+definição de recall@10 quando o conjunto "relevante" (por gênero) é grande:
+
+    recall@10 = (acertos nos 10 retornados) / (total de filmes relevantes)
+
+Se uma query tem 6000 filmes com gênero batendo (ex: "a detective
+investigates a murder in the city", que casa com Crime Fiction/Mystery/
+Detective fiction/Crime Thriller/Whodunit — gêneros comuns), o recall@10
+MÁXIMO POSSÍVEL — mesmo se os 10 resultados fossem todos perfeitos — é
+10/6000 ≈ 0.17%. Já pra "a group plans a heist..." (só ~150 filmes com
+gênero Heist/Caper story), o teto é 10/150 ≈ 6.7%. Essa diferença de teto
+entre queries é a maior responsável pela variação nos números, muito mais
+que a qualidade de cada método de busca — por isso os valores absolutos são
+pequenos e heterogêneos, e a comparação relevante é entre métodos NA MESMA
+query, não a média bruta entre queries diferentes.
+
+Exemplo concreto de imprecisão do proxy (não um bug de código): pra query
+"a group plans a heist to steal something valuable", o Método 1 (TF-IDF)
+encontra "Foolproof" como resultado nº2 (score 0.277) — um filme sobre um
+grupo de amigos que criam planos pra assaltar alvos, um match semântico
+quase perfeito com a pergunta. Mas "Foolproof" tem gênero `["Thriller",
+"Crime Fiction", "Caper story", ...]` no dataset — inicialmente nosso proxy
+só considerava o gênero exato "Heist" como relevante, então esse acerto
+óbvio contava como "erro" na métrica. Ampliamos o conjunto de gêneros
+aceitos por query (`QUERY_RELEVANT_GENRES` abaixo) incluindo sinônimos de
+gênero próximos (ex: "Caper story" pra heist, "Whodunit" pra detetive,
+"Anti-war film"/"Combat Films" pra guerra, "Creature Film" pra monstro) —
+isso reduz esse tipo de falso-negativo, mas não elimina o problema de fundo:
+qualquer taxonomia de gênero é uma aproximação grosseira de "relevância
+semântica de verdade", e por isso o recall aqui continua sendo só um proxy.
 """
 
 from __future__ import annotations
@@ -69,11 +98,11 @@ N_LATENCY_REPEATS = 10
 # proxy de relevância por gênero (ver docstring acima) -- gêneros conferidos
 # contra o vocabulário real de movies.parquet
 QUERY_RELEVANT_GENRES = {
-    "a detective investigates a murder in the city": {"Crime Fiction", "Mystery", "Detective fiction", "Crime Thriller"},
+    "a detective investigates a murder in the city": {"Crime Fiction", "Mystery", "Detective fiction", "Crime Thriller", "Whodunit"},
     "a robot falls in love with a human": {"Science Fiction"},
-    "soldiers survive a brutal war": {"War film"},
-    "a group plans a heist to steal something valuable": {"Heist"},
-    "a monster hunts people in the woods at night": {"Horror", "Monster movie", "Monster"},
+    "soldiers survive a brutal war": {"War film", "Anti-war film", "Anti-war", "Combat Films"},
+    "a group plans a heist to steal something valuable": {"Heist", "Caper story"},
+    "a monster hunts people in the woods at night": {"Horror", "Monster movie", "Monster", "Creature Film"},
 }
 
 

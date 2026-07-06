@@ -1,21 +1,21 @@
 method,query,latency_ms,recall_at_10
-cosine_tfidf,a detective investigates a murder in the city,6.100149999838322,0.0005
-cosine_tfidf,a robot falls in love with a human,6.9315000146161765,0.003420265070542967
-cosine_tfidf,soldiers survive a brutal war,5.726749979658052,0.0038560411311053984
-cosine_tfidf,a group plans a heist to steal something valuable,6.250999984331429,0.013793103448275862
-cosine_tfidf,a monster hunts people in the woods at night,6.673799973214045,0.0014517299782240503
-word2vec_avg,a detective investigates a murder in the city,0.38365001091733575,0.001
-word2vec_avg,a robot falls in love with a human,0.27790002059191465,0.0
-word2vec_avg,soldiers survive a brutal war,0.33239999902434647,0.003213367609254499
-word2vec_avg,a group plans a heist to steal something valuable,0.36234999424777925,0.006896551724137931
-word2vec_avg,a monster hunts people in the woods at night,0.3318499948363751,0.0012097749818533753
-sbert_faiss,a detective investigates a murder in the city,14.045900024939328,0.0011666666666666668
-sbert_faiss,a robot falls in love with a human,13.952800014521927,0.0017101325352714834
-sbert_faiss,soldiers survive a brutal war,13.96260000183247,0.005784061696658098
-sbert_faiss,a group plans a heist to steal something valuable,13.978100003441796,0.020689655172413793
-sbert_faiss,a monster hunts people in the woods at night,14.134950004518032,0.0012097749818533753
-sbert_faiss_rerank,a detective investigates a murder in the city,857.4329999973997,0.0013333333333333333
-sbert_faiss_rerank,a robot falls in love with a human,855.5739500152413,0.002992731936725096
-sbert_faiss_rerank,soldiers survive a brutal war,862.877550011035,0.005784061696658098
-sbert_faiss_rerank,a group plans a heist to steal something valuable,860.2576999983285,0.020689655172413793
-sbert_faiss_rerank,a monster hunts people in the woods at night,891.2366000004113,0.0014517299782240503
+cosine_tfidf,a detective investigates a murder in the city,6.065250025130808,0.0004998333888703765
+cosine_tfidf,a robot falls in love with a human,6.57819997286424,0.003420265070542967
+cosine_tfidf,soldiers survive a brutal war,5.723899987060577,0.0038240917782026767
+cosine_tfidf,a group plans a heist to steal something valuable,6.20135001372546,0.015544041450777202
+cosine_tfidf,a monster hunts people in the woods at night,6.747649982571602,0.0014443909484833895
+word2vec_avg,a detective investigates a murder in the city,0.3252000024076551,0.000999666777740753
+word2vec_avg,a robot falls in love with a human,0.295600009849295,0.0
+word2vec_avg,soldiers survive a brutal war,0.30120002338662744,0.0038240917782026767
+word2vec_avg,a group plans a heist to steal something valuable,0.3227500128559768,0.0051813471502590676
+word2vec_avg,a monster hunts people in the woods at night,0.36944999010302126,0.0014443909484833895
+sbert_faiss,a detective investigates a murder in the city,13.114950008457527,0.0011662779073642118
+sbert_faiss,a robot falls in love with a human,13.531950011383742,0.0017101325352714834
+sbert_faiss,soldiers survive a brutal war,14.120949985226616,0.0057361376673040155
+sbert_faiss,a group plans a heist to steal something valuable,13.875699980417266,0.02072538860103627
+sbert_faiss,a monster hunts people in the woods at night,13.880699989385903,0.001203659123736158
+sbert_faiss_rerank,a detective investigates a murder in the city,843.3858999924269,0.0013328890369876708
+sbert_faiss_rerank,a robot falls in love with a human,846.2293499906082,0.002992731936725096
+sbert_faiss_rerank,soldiers survive a brutal war,844.4502499769442,0.0057361376673040155
+sbert_faiss_rerank,a group plans a heist to steal something valuable,841.9894500111695,0.025906735751295335
+sbert_faiss_rerank,a monster hunts people in the woods at night,852.7110500144772,0.0014443909484833895
