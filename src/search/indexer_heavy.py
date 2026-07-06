@@ -24,19 +24,18 @@ detalhada em retriever_heavy.py sobre a diferença em relação ao HNSW citado
 nos slides originais do grupo.
 """
 
-import math
 from pathlib import Path
 import numpy as np
 import pandas as pd
 
 try:
     from sentence_transformers import SentenceTransformer
-except Exception as e:  # pragma: no cover
+except Exception:  # pragma: no cover
     raise ImportError("Install sentence-transformers to run the heavy indexer: pip install sentence-transformers")
 
 try:
     import faiss
-except Exception as e:  # pragma: no cover
+except Exception:  # pragma: no cover
     raise ImportError("Install faiss-cpu or faiss-gpu to use FAISS: pip install faiss-cpu")
 
 
@@ -85,11 +84,10 @@ def build_index(
     norms[norms == 0] = 1.0
     embeddings = embeddings / norms
 
-    # Salvar embeddings e metadata
     np.save(out_path / "embeddings.npy", embeddings)
     df.reset_index(drop=True).to_parquet(out_path / "metadata.parquet", index=False)
 
-    # Construir índice FAISS (IndexFlatIP para similaridade por produto interno)
+    # IndexFlatIP: produto interno sobre vetores normalizados == similaridade de cosseno
     index = faiss.IndexFlatIP(dim)
     index.add(embeddings)
     faiss.write_index(index, str(out_path / "index.faiss"))

@@ -455,7 +455,8 @@ trocasse pra HNSW.
 - **Qualidade do texto gerado:** o modelo é pequeno, então às vezes
   parafraseia demais as sinopses originais em vez de escrever uma
   recomendação totalmente nova e natural. Funcional, mas não é uma resposta
-  "polida" como a de um LLM grande (GPT-4 e afins).
+  "polida" como a de um modelo comercial grande, que tem muito mais
+  parâmetros e treino.
 - **Latência do reranking herdada da Pessoa 3:** como a API usa o Método
   3+4, ela herda o problema de performance do recarregamento do
   CrossEncoder a cada chamada (~870ms de latência real, mas pode ficar mais

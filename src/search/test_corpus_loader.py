@@ -10,7 +10,7 @@ rodando `python3 corpus_loader.py` depois de gerar data/processed/movies.parquet
 """
 import pandas as pd
 
-from corpus_loader import FALLBACK_SAMPLE_PATH, RAW_REQUIRED_COLUMNS, _adapt_schema, load_corpus
+from corpus_loader import FALLBACK_SAMPLE_PATH, _adapt_schema, load_corpus
 
 # Schema real completo de movies.parquet (ver README "Saída"), incluindo colunas
 # que a busca não usa (genres, runtime, ...) e wiki_movie_id como int — como
