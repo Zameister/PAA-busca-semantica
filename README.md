@@ -267,13 +267,13 @@ python scripts/benchmark_all_methods.py
 
 | Método | Latência média | Recall@10 (proxy) |
 |---|---|---|
-| word2vec_avg | 0.34 ms | 0.0025 |
-| cosine_tfidf | 6.34 ms | 0.0046 |
-| sbert_faiss | 14.0 ms | 0.0061 |
-| sbert_faiss + rerank | 865.5 ms | 0.0065 |
+| word2vec_avg | 0.32 ms | 0.0023 |
+| cosine_tfidf | 6.26 ms | 0.0049 |
+| sbert_faiss | 13.7 ms | 0.0061 |
+| sbert_faiss + rerank | 845.8 ms | 0.0075 |
 
 O número do reranking já reflete o modelo carregado uma única vez (ver
-"API + LLM local" acima) — os ~865ms são o custo real de rodar o
+"API + LLM local" acima) — os ~846ms são o custo real de rodar o
 Cross-Encoder sobre ~30 candidatos, não overhead de recarregar o modelo.
 
 Padrão esperado: métodos mais lentos e sofisticados (SBERT, rerank) acham
@@ -290,6 +290,30 @@ razoável pra comparar os métodos entre si, mas não é uma medida de
 relevância de verdade. Ver o docstring de `benchmark_all_methods.py` pra
 detalhes completos. Uma melhoria futura seria o grupo montar um gabarito
 de verdade, mesmo que pequeno.
+
+**Por que os valores de recall@10 são tão baixos (0.2%-0.8%) — investigado,
+não é bug:** antes de aceitar esse número, verificamos o código
+(tipos de dado, normalização de string, montagem do conjunto "relevante",
+aplicação do `top_k`) e está tudo correto. O valor baixo é uma consequência
+matemática inevitável: `recall@10 = acertos / total de filmes relevantes`,
+e o conjunto "relevante por gênero" tem de ~150 a ~6000 filmes dependendo
+da pergunta — então o recall@10 **máximo possível** (mesmo com os 10
+resultados perfeitos) já é minúsculo (ex: 10/6000 ≈ 0.17% pra "detective
+investigates a murder"). A diferença de teto entre perguntas explica a
+maior parte da variação nos números — mais que a qualidade de cada método.
+
+Exemplo concreto de imprecisão do proxy (não bug de código): pra "a group
+plans a heist to steal something valuable", o TF-IDF encontra **Foolproof**
+como 2º resultado — um filme sobre um grupo de amigos que bolam planos de
+assalto, um match semântico praticamente perfeito com a pergunta. Só que
+"Foolproof" tem gênero `Caper story` no dataset, não `Heist` — então, com
+a curadoria original (só o gênero "Heist"), esse acerto óbvio contava como
+"erro" na métrica. Ampliamos o conjunto de gêneros aceitos por pergunta
+(ver `QUERY_RELEVANT_GENRES` em `benchmark_all_methods.py`) com sinônimos
+próximos (`Caper story`, `Whodunit`, `Anti-war film`/`Combat Films`,
+`Creature Film`), o que melhora o proxy mas não resolve o problema de fundo:
+qualquer taxonomia de gênero é uma aproximação grosseira de relevância
+semântica de verdade.
 
 ## Notebook de exploração (notebooks/exploracao.ipynb)
 
